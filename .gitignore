@@ -1,2 +1,4 @@
 *.class
 *.log
+/target
+/src/main/scala/com/github/onlinestorecqrs/testing/
