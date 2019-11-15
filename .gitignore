@@ -2,3 +2,8 @@
 *.log
 /target
 /src/main/scala/com/github/onlinestorecqrs/testing/
+/.idea/*
+.gradle/*
+/build
+/project/target
+/project/project/*

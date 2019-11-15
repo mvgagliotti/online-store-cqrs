@@ -12,8 +12,8 @@ object OrderShardRegion {
     case class CommandEnvelope(orderId: String, command: OrderCommand)
 
     def extractEntityId: ShardRegion.ExtractEntityId = {
-        case CommandEnvelope(orderId, command) =>
-            (orderId, command)
+        case envelope@CommandEnvelope(orderId, command) =>
+            (orderId, envelope)
     }
 
     def extractShardId: ShardRegion.ExtractShardId = {

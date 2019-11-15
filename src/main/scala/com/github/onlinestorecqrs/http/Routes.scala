@@ -9,6 +9,7 @@ import akka.stream.ActorMaterializer
 import com.github.onlinestorecqrs.domain.DomainModel._
 import com.github.onlinestorecqrs.api.Api.{ItemDTO, OrderDTO}
 import com.github.onlinestorecqrs.domain.persistence.OrderActor.{CreateOrderCommand, OrderCreatedEvent}
+import com.github.onlinestorecqrs.shard.OrderShardRegion.CommandEnvelope
 import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.duration._
@@ -52,21 +53,19 @@ object Routes {
                                 })
 
                             //2. Sends the command to the shard region actor
-                            val future = shardRegion ? command
+                            val future = shardRegion ? new CommandEnvelope(command.orderId, command)
 
-                            onComplete(future.mapTo[OrderCreatedEvent]) { evt =>
-                                if (evt.isSuccess) {
-                                    val result =
-                                        evt.map[OrderDTO] { x =>
-                                            new OrderDTO(
-                                                id = Some(x.orderId),
-                                                items = List()
-                                            )
-                                        }.get
+                            onComplete(future.mapTo[OrderCreatedEvent]) { evtTry =>
+                                if (evtTry.isSuccess) {
+                                    val event = evtTry.get
 
+                                    val result = new OrderDTO(
+                                        id = Some(event.orderId),
+                                        items = List()
+                                    )
                                     complete(result)
                                 } else {
-                                    failWith(evt.failed.get)
+                                    failWith(evtTry.failed.get)
                                 }
                             }
                         }
