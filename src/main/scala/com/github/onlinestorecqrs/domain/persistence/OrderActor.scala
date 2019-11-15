@@ -4,7 +4,6 @@ import akka.actor.ActorLogging
 import akka.persistence.PersistentActor
 import com.github.onlinestorecqrs.domain.DomainModel._
 import com.github.onlinestorecqrs.domain.persistence.OrderActor.{CreateOrderCommand, OrderCommand, OrderCreatedEvent}
-import com.github.onlinestorecqrs.shard.OrderShardRegion.CommandEnvelope
 
 /**
   * Domain commands % events:
@@ -64,14 +63,6 @@ class OrderActor extends PersistentActor with ActorLogging {
     }
 
     override def receiveCommand: Receive = {
-
-        case CommandEnvelope(_, CreateOrderCommand(orderId, userId, items)) =>
-            log.info("A order enveloped creation command has arrived")
-            persist(OrderCreatedEvent(orderId, userId, items)) { event =>
-                this.order = new Order(event.orderId, event.userId, event.items)
-                sender() ! event
-                log.info(s"Order ${event.orderId} has been persisted")
-            }
 
         case CreateOrderCommand(orderId, userId, items) =>
             log.info("A order creation command has arrived")

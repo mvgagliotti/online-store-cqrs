@@ -6,10 +6,9 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.server.Directives.{as, complete, concat, entity, get, path, pathPrefix, post, _}
 import akka.stream.ActorMaterializer
-import com.github.onlinestorecqrs.domain.DomainModel._
 import com.github.onlinestorecqrs.api.Api.{ItemDTO, OrderDTO}
+import com.github.onlinestorecqrs.domain.DomainModel._
 import com.github.onlinestorecqrs.domain.persistence.OrderActor.{CreateOrderCommand, OrderCreatedEvent}
-import com.github.onlinestorecqrs.shard.OrderShardRegion.CommandEnvelope
 import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.duration._
@@ -53,7 +52,7 @@ object Routes {
                                 })
 
                             //2. Sends the command to the shard region actor
-                            val future = shardRegion ? new CommandEnvelope(command.orderId, command)
+                            val future = shardRegion ? command
 
                             onComplete(future.mapTo[OrderCreatedEvent]) { evtTry =>
                                 if (evtTry.isSuccess) {
