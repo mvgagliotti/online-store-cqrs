@@ -4,6 +4,7 @@ import java.util.UUID
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.server
 import akka.http.scaladsl.server.Directives.{as, complete, concat, entity, get, path, pathPrefix, post, _}
 import akka.stream.ActorMaterializer
 import com.github.onlinestorecqrs.api.Api.{ItemDTO, OrderDTO}
@@ -12,6 +13,7 @@ import com.github.onlinestorecqrs.domain.persistence.OrderActor.{CreateOrderComm
 import spray.json.DefaultJsonProtocol._
 
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 /**
   * POST /order { items: [] }               // Create order
@@ -22,7 +24,7 @@ import scala.concurrent.duration._
 object Routes {
 
     def getRoutes(implicit actorSystem: ActorSystem,
-                  shardRegion: ActorRef) = {
+                  shardRegion: ActorRef): server.Route = {
 
         implicit val materializer = ActorMaterializer()
         implicit val executionContext = actorSystem.dispatcher // needed for the future flatMap/onComplete in the end
@@ -44,37 +46,31 @@ object Routes {
                             implicit val timeout = Timeout(2 seconds)
 
                             //1. Creates the command
-                            val command = new CreateOrderCommand(
+                            val command = CreateOrderCommand(
                                 UUID.randomUUID().toString,
                                 "user-123",
                                 order.items.map { dto =>
-                                    new Item(id = dto.id, description = dto.description, amount = dto.amount, value = 0)
+                                    Item(id = dto.id, description = dto.description, amount = dto.amount, value = 0)
                                 })
 
                             //2. Sends the command to the shard region actor
                             val future = shardRegion ? command
 
-                            onComplete(future.mapTo[OrderCreatedEvent]) { evtTry =>
-                                if (evtTry.isSuccess) {
-                                    val event = evtTry.get
-
-                                    val result = new OrderDTO(
-                                        id = Some(event.orderId),
-                                        items = List()
-                                    )
-                                    complete(result)
-                                } else {
-                                    failWith(evtTry.failed.get)
-                                }
+                            onComplete(future.mapTo[OrderCreatedEvent]) {
+                                case Success(event) => complete(OrderDTO(
+                                    id = Some(event.orderId),
+                                    items = List()
+                                ))
+                                case Failure(exception) => failWith(exception)
                             }
                         }
                     }
                 },
-                pathPrefix(Segment / "items") { id =>
+                pathPrefix(Segment / "items") { _ =>
                     pathEnd {
                         post {
-                            entity(as[OrderDTO]) { order =>
-                                complete(new ItemDTO("1", "23", 10))
+                            entity(as[OrderDTO]) { _ =>
+                                complete(ItemDTO("1", "23", 10))
                             }
                         }
                     }
@@ -82,7 +78,7 @@ object Routes {
                 get {
                     path(Segment) { id =>
                         pathEnd {
-                            complete(new OrderDTO(Some(s"xpto_${id}"), List()))
+                            complete(OrderDTO(Some(s"xpto_$id"), List()))
                         }
                     }
                 }
