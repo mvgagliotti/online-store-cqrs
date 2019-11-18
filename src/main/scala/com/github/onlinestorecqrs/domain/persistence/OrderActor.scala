@@ -52,16 +52,15 @@ object OrderActor {
   */
 class OrderActor extends PersistentActor with ActorLogging {
 
-    private var order: Order = null
+    private var order: Option[Order] = None
 
-    override def persistenceId: String = {
-        if (order == null) self.path.name.split("/")(self.path.name.split("/").size - 1)
-        else order.id
+    override def persistenceId: String = order match{
+        case None => self.path.name.split("/")(self.path.name.split("/").length - 1)
+        case Some(orderValue) => orderValue.id
     }
 
     override def receiveRecover: Receive = {
-        case OrderCreatedEvent(orderId, userId, items) =>
-            this.order = new Order(orderId, userId, items)
+        case OrderCreatedEvent(orderId, userId, items) => this.order = Some(Order(orderId, userId, items))
     }
 
     override def receiveCommand: Receive = {
@@ -69,7 +68,7 @@ class OrderActor extends PersistentActor with ActorLogging {
         case CreateOrderCommand(orderId, userId, items) =>
             log.info("A order creation command has arrived")
             persist(OrderCreatedEvent(orderId, userId, items)) { event =>
-                this.order = new Order(event.orderId, event.userId, event.items)
+                this.order = Some(Order(event.orderId, event.userId, event.items))
                 sender() ! event
                 log.info(s"Order ${event.orderId} has been persisted")
             }

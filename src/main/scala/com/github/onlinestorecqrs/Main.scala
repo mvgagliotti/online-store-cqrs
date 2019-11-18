@@ -36,14 +36,14 @@ import scala.io.StdIn
 object Main extends App {
 
     //getting cluster node port by command line args, or falling back to 2551
-    val nodePort: String = if (args.length == 1) args(0) else "2551"
+    val nodePort: String = if (args.nonEmpty) args(0) else "2551"
 
-    println(s"Starting Online Store node at port ${nodePort}")
+    println(s"Starting Online Store node at port $nodePort")
 
     //creating actor system with all the persistence and cluster configuration
     val config = ConfigFactory.parseString(
         s"""
-           |akka.remote.artery.canonical.port = ${nodePort}
+           |akka.remote.artery.canonical.port = $nodePort
         """.stripMargin).withFallback(ConfigFactory.load("app.conf"))
 
     //creating the actor system along with shard region actor
