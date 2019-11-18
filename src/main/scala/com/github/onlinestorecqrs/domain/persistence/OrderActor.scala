@@ -30,6 +30,9 @@ object OrderActor {
 
     case class RefundOrderCommand(orderId: String, value: BigDecimal) extends OrderCommand
 
+    case class Get(orderId: String) extends OrderCommand
+
+
     //events
     case class OrderCreatedEvent(orderId: String, userId: String, items: List[Item])
 
@@ -50,7 +53,6 @@ object OrderActor {
 class OrderActor extends PersistentActor with ActorLogging {
 
     private var order: Order = null
-    val a: OrderCommand = null
 
     override def persistenceId: String = {
         if (order == null) self.path.name.split("/")(self.path.name.split("/").size - 1)

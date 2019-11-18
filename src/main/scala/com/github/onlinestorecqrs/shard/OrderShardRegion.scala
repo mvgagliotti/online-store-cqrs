@@ -12,22 +12,18 @@ object OrderShardRegion {
     def setupClusterSharding(system: ActorSystem) = {
         ClusterSharding(system).start(
             typeName = "Order",
-            entityProps = Props[OrderActor],
+            entityProps = Props(new OrderActor()),
             settings = ClusterShardingSettings(system),
             extractEntityId = extractEntityId,
             extractShardId = extractShardId
         )
     }
 
-    private def extractEntityId: ShardRegion.ExtractEntityId = superClassExtractEntityId
+    def extractEntityId: ShardRegion.ExtractEntityId = superClassExtractEntityId
 
-    private def extractShardId: ShardRegion.ExtractShardId = superClassExtractShardID
-
-    private def superClassExtractShardID = new IsSuperClassOf[OrderCommand, String](classOf[OrderCommand]) {
-        override def apply(command: Any): String = {
-            val orderCommand: OrderCommand = command.asInstanceOf[OrderCommand]
-            (orderCommand.orderId.hashCode.intValue() % NUMBER_OF_SHARDS).toString
-        }
+    def extractShardId: ShardRegion.ExtractShardId = { command =>
+        val orderCommand: OrderCommand = command.asInstanceOf[OrderCommand]
+        (orderCommand.orderId.hashCode.abs.intValue() % NUMBER_OF_SHARDS).toString
     }
 
     private def superClassExtractEntityId =
