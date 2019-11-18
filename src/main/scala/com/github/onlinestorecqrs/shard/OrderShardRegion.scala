@@ -1,18 +1,18 @@
 package com.github.onlinestorecqrs.shard
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings, ShardRegion}
 import com.github.onlinestorecqrs.domain.persistence.OrderActor
-import com.github.onlinestorecqrs.domain.persistence.OrderActor.{CreateOrderCommand, OrderCommand}
+import com.github.onlinestorecqrs.domain.persistence.OrderActor.OrderCommand
 
 object OrderShardRegion {
 
     val NUMBER_OF_SHARDS = 10
 
-    def setupClusterSharding(system: ActorSystem) = {
+    def setupClusterSharding(system: ActorSystem): ActorRef = {
         ClusterSharding(system).start(
             typeName = "Order",
-            entityProps = Props(new OrderActor()),
+            entityProps = Props[OrderActor],
             settings = ClusterShardingSettings(system),
             extractEntityId = extractEntityId,
             extractShardId = extractShardId
@@ -28,16 +28,13 @@ object OrderShardRegion {
 
     private def superClassExtractEntityId =
         new IsSuperClassOf[OrderCommand, (String, OrderCommand)](classOf[OrderCommand]) {
-            override def apply(command: Any): (String, OrderCommand) = {
-                val orderCommand: OrderCommand = command.asInstanceOf[OrderCommand]
-                (orderCommand.orderId, orderCommand)
+            override def apply(command: Any): (String, OrderCommand) = command match {
+                case orderCommand:OrderCommand => (orderCommand.orderId, orderCommand)
             }
         }
 
     private abstract class IsSuperClassOf[A, B](clazz: Class[A]) extends PartialFunction[Any, B] {
-        override def isDefinedAt(x: Any): Boolean = {
-            if (clazz.isAssignableFrom(x.getClass)) true else false
-        }
+        override def isDefinedAt(x: Any): Boolean = clazz.isAssignableFrom(x.getClass)
     }
 
 }
