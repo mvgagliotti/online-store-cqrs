@@ -1,15 +1,11 @@
 package com.github.onlinestorecqrs.http
 
-import java.util.UUID
-
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.server.Directives.{as, complete, concat, entity, get, path, pathPrefix, post, _}
 import akka.stream.ActorMaterializer
 import com.github.onlinestorecqrs.api.Api.{ItemDTO, OrderDTO}
-import com.github.onlinestorecqrs.domain.DomainModel._
-import com.github.onlinestorecqrs.domain.persistence.OrderActor.{CreateOrderCommand, OrderCreatedEvent}
-import spray.json.DefaultJsonProtocol._
+import com.github.onlinestorecqrs.domain.persistence.OrderActor.OrderCreatedEvent
 
 import scala.concurrent.duration._
 
@@ -19,7 +15,7 @@ import scala.concurrent.duration._
   * GET  /order/$id                         // Get order by id
   *
   */
-object Routes {
+object Routes extends JsonFormats {
 
     def getRoutes(implicit actorSystem: ActorSystem,
                   shardRegion: ActorRef) = {
@@ -27,48 +23,10 @@ object Routes {
         implicit val materializer = ActorMaterializer()
         implicit val executionContext = actorSystem.dispatcher // needed for the future flatMap/onComplete in the end
 
-        // formats for unmarshalling and marshalling
-        implicit val itemFormat = jsonFormat4(Item)
-        implicit val orderFormat = jsonFormat3(Order)
-        implicit val itemDTOFormat = jsonFormat3(ItemDTO)
-        implicit val orderDTOFormat = jsonFormat2(OrderDTO)
-
         pathPrefix("order") {
             concat(
                 pathEnd {
-                    post {
-                        import akka.pattern.ask
-                        import akka.util.Timeout
-
-                        entity(as[OrderDTO]) { order =>
-                            implicit val timeout = Timeout(2 seconds)
-
-                            //1. Creates the command
-                            val command = new CreateOrderCommand(
-                                UUID.randomUUID().toString,
-                                "user-123",
-                                order.items.map { dto =>
-                                    new Item(id = dto.id, description = dto.description, amount = dto.amount, value = 0)
-                                })
-
-                            //2. Sends the command to the shard region actor
-                            val future = shardRegion ? command
-
-                            onComplete(future.mapTo[OrderCreatedEvent]) { evtTry =>
-                                if (evtTry.isSuccess) {
-                                    val event = evtTry.get
-
-                                    val result = new OrderDTO(
-                                        id = Some(event.orderId),
-                                        items = List()
-                                    )
-                                    complete(result)
-                                } else {
-                                    failWith(evtTry.failed.get)
-                                }
-                            }
-                        }
-                    }
+                    postOrder(shardRegion)
                 },
                 pathPrefix(Segment / "items") { id =>
                     pathEnd {
@@ -90,4 +48,29 @@ object Routes {
         }
     }
 
+    private def postOrder(shardRegion: ActorRef) = {
+        post {
+            import akka.pattern.ask
+            import akka.util.Timeout
+
+            entity(as[OrderDTO]) { order =>
+                implicit val timeout = Timeout(2 seconds)
+
+                //1. Creates the command
+                val command = Mapper.mapToCommand(order)
+
+                //2. Sends the command to the shard region actor
+                val future = shardRegion ? command
+
+                //3. Register a onComplete with the returned future
+                onComplete(future.mapTo[OrderCreatedEvent]) { evtTry =>
+                    if (evtTry.isSuccess) {
+                        complete(Mapper.mapToDTO(evtTry.get))
+                    } else {
+                        failWith(evtTry.failed.get)
+                    }
+                }
+            }
+        }
+    }
 }
