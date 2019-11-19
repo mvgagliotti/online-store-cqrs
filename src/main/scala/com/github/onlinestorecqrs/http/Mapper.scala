@@ -6,7 +6,7 @@ import com.github.onlinestorecqrs.api.Api
 import com.github.onlinestorecqrs.api.Api.{ItemDTO, OrderDTO}
 import com.github.onlinestorecqrs.domain.DomainModel
 import com.github.onlinestorecqrs.domain.DomainModel.Item
-import com.github.onlinestorecqrs.domain.persistence.OrderActor.{CreateOrderCommand, OrderCreatedEvent}
+import com.github.onlinestorecqrs.domain.DomainApi.{CreateOrderCommand, OrderCreatedEvent}
 
 object Mapper {
 

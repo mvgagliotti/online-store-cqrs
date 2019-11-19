@@ -13,7 +13,7 @@ class ShardedAggregateConfigBuilder[T <: Aggregate[R], R] {
     private var idExtractor: IdExtractor = null
     private var shardIdExtractor: ShardIdExtractor = null
 
-    def buildShard(actorSystem: ActorSystem): ActorRef = {
+    def buildShardRegion(actorSystem: ActorSystem): ActorRef = {
         //TODO: validate builder fields
 
         ClusterSharding(actorSystem)
@@ -31,7 +31,7 @@ class ShardedAggregateConfigBuilder[T <: Aggregate[R], R] {
         this
     }
 
-    def withInstanceCreator(x: ((EventManager) => T)) = {
+    def withInstanceCreator(x: ((EventManager, AggregateLogger) => T)) = {
         aggregateBuilder.withInstanceCreator(x)
         this
     }
@@ -49,14 +49,14 @@ class ShardedAggregateConfigBuilder[T <: Aggregate[R], R] {
 
 class AggregateBuilder[T <: Aggregate[R], R] {
 
-    private var instanceCreator: ((EventManager) => T) = null
+    private var instanceCreator: ((EventManager, AggregateLogger) => T) = null
 
-    def withInstanceCreator(x: ((EventManager) => T)) = {
+    def withInstanceCreator(x: ((EventManager, AggregateLogger) => T)) = {
         instanceCreator = x
         this
     }
 
-    def build(eventManager: EventManager): T = {
-        instanceCreator(eventManager)
+    def build(eventManager: EventManager, aggregateLogger: AggregateLogger): T = {
+        instanceCreator(eventManager, aggregateLogger)
     }
 }

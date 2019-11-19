@@ -1,22 +1,23 @@
 package com.github.onlinestorecqrs.shard
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings, ShardRegion}
-import com.github.onlinestorecqrs.domain.persistence.OrderActor
-import com.github.onlinestorecqrs.domain.persistence.OrderActor.OrderCommand
+import akka.actor.{ActorRef, ActorSystem}
+import akka.cluster.sharding.ShardRegion
+import com.github.onlinestorecqrs.domain.DomainModel.Order
+import com.github.onlinestorecqrs.domain.OrderAggregate
+import com.github.onlinestorecqrs.domain.DomainApi.OrderCommand
+import com.github.onlinestorecqrs.framework.ShardedAggregateConfigBuilder
 
 object OrderShardRegion {
 
     val NUMBER_OF_SHARDS = 10
 
     def setupClusterSharding(system: ActorSystem): ActorRef = {
-        ClusterSharding(system).start(
-            typeName = "Order",
-            entityProps = Props[OrderActor],
-            settings = ClusterShardingSettings(system),
-            extractEntityId = extractEntityId,
-            extractShardId = extractShardId
-        )
+        new ShardedAggregateConfigBuilder[OrderAggregate, Order]()
+            .withName("Order")
+            .withInstanceCreator((new OrderAggregate(_, _)))
+            .withEntityIdExtractor(OrderShardRegion.extractEntityId)
+            .withShardIdExtractor(OrderShardRegion.extractShardId)
+            .buildShardRegion(system)
     }
 
     def extractEntityId: ShardRegion.ExtractEntityId = superClassExtractEntityId
@@ -29,7 +30,7 @@ object OrderShardRegion {
     private def superClassExtractEntityId =
         new IsSuperClassOf[OrderCommand, (String, OrderCommand)](classOf[OrderCommand]) {
             override def apply(command: Any): (String, OrderCommand) = command match {
-                case orderCommand:OrderCommand => (orderCommand.orderId, orderCommand)
+                case orderCommand: OrderCommand => (orderCommand.orderId, orderCommand)
             }
         }
 

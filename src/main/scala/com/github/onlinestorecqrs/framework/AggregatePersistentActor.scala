@@ -25,7 +25,7 @@ class AggregatePersistentActor[T <: Aggregate[R], R](aggregateBuilder: Aggregate
         }
     }
 
-    val aggregate: T = aggregateBuilder.build(eventManagerAdapter)
+    val aggregate: T = aggregateBuilder.build(eventManagerAdapter, new AkkaLoggerAdapter(this))
 
     override def persistenceId: String = self.path.name.split("/")(self.path.name.split("/").length - 1)
 
@@ -37,6 +37,6 @@ class AggregatePersistentActor[T <: Aggregate[R], R](aggregateBuilder: Aggregate
         case SnapshotOffer(_, payload: R) =>
             aggregate.handleEvent(new Snapshot(payload))
         case RecoveryCompleted =>
-            log.info(s"Aggregate recovery completed: ${aggregate.aggregateRoot()}")
+            log.info(s"Aggregate recovery completed")
     }
 }
