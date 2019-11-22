@@ -3,9 +3,9 @@ package com.github.onlinestorecqrs.http
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.server.Directives.{as, complete, concat, entity, get, path, pathPrefix, post, _}
-import akka.stream.ActorMaterializer
 import com.github.onlinestorecqrs.api.Api.{ItemDTO, OrderDTO}
 import com.github.onlinestorecqrs.domain.DomainApi.OrderCreatedEvent
+import com.github.onlinestorecqrs.http.JsonFormats._
 
 import scala.concurrent.duration._
 
@@ -15,13 +15,10 @@ import scala.concurrent.duration._
   * GET  /order/$id                         // Get order by id
   *
   */
-object Routes extends JsonFormats {
+object Routes {
 
     def getRoutes(implicit actorSystem: ActorSystem,
                   shardRegion: ActorRef) = {
-
-        implicit val materializer = ActorMaterializer()
-        implicit val executionContext = actorSystem.dispatcher // needed for the future flatMap/onComplete in the end
 
         pathPrefix("order") {
             concat(

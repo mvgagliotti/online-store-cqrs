@@ -2,6 +2,7 @@ package com.github.onlinestorecqrs.framework
 
 import akka.actor.ActorLogging
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
+import com.github.onlinestorecqrs.framework.api.Aggregate
 
 /**
   * Aggregate Persistent Actor
@@ -27,7 +28,7 @@ class AggregatePersistentActor[T <: Aggregate[R], R](aggregateBuilder: Aggregate
 
     val aggregate: T = aggregateBuilder.build(eventManagerAdapter, new AkkaLoggerAdapter(this))
 
-    override def persistenceId: String = self.path.name.split("/")(self.path.name.split("/").length - 1)
+    override def persistenceId: String = self.path.name.split("/")(self.path.name.split("/").length)
 
     override def receiveCommand: Receive = aggregate.handleCommand
 

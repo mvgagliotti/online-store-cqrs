@@ -2,7 +2,8 @@ package com.github.onlinestorecqrs.domain
 
 import com.github.onlinestorecqrs.domain.DomainModel.Order
 import DomainApi.{CreateOrderCommand, Get, OrderCreatedEvent}
-import com.github.onlinestorecqrs.framework.{Aggregate, AggregateLogger, EventManager, Snapshot}
+import com.github.onlinestorecqrs.framework.api.Aggregate
+import com.github.onlinestorecqrs.framework.{AggregateLogger, EventManager, Snapshot}
 
 class OrderAggregate(eventManager: EventManager,
                      logger: AggregateLogger) extends Aggregate[Order] {
@@ -27,5 +28,4 @@ class OrderAggregate(eventManager: EventManager,
             this.order = payload
     }
 
-    override def aggregateRoot(): Order = order.copy()
 }

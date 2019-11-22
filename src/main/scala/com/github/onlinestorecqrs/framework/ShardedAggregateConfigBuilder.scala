@@ -2,6 +2,7 @@ package com.github.onlinestorecqrs.framework
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings}
+import com.github.onlinestorecqrs.framework.api.Aggregate
 
 class ShardedAggregateConfigBuilder[T <: Aggregate[R], R] {
 

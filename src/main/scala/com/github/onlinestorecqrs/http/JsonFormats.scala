@@ -5,7 +5,7 @@ import com.github.onlinestorecqrs.domain.DomainModel.{Item, Order}
 import spray.json.DefaultJsonProtocol.{jsonFormat2, jsonFormat3, jsonFormat4}
 import spray.json.DefaultJsonProtocol._
 
-trait JsonFormats {
+object JsonFormats {
 
     // formats for unmarshalling and marshalling
     implicit val itemFormat = jsonFormat4(Item)

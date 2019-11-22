@@ -34,6 +34,9 @@ libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
     "com.typesafe.akka" %% "akka-stream" % akkaVersion,
 
+    //Guice
+    "com.google.inject" %% "guice" % "4.2.2",
+
     /////////////////////
     /// Test dependencies
     /////////////////////

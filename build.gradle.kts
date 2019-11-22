@@ -45,6 +45,9 @@ dependencies {
     implementation("com.typesafe.akka:akka-http-spray-json_$scalaVersion:$akkaHttpVersion")
     implementation("com.typesafe.akka:akka-stream_$scalaVersion:$akkaVersion")
 
+    //Guice
+    implementation("com.google.inject:guice:4.2.2")
+
     /////////////////////
     /// Test dependencies
     /////////////////////
