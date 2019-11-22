@@ -2,11 +2,12 @@ package com.github.onlinestorecqrs.domain
 
 import com.github.onlinestorecqrs.domain.DomainModel.Order
 import DomainApi.{CreateOrderCommand, Get, OrderCreatedEvent}
-import com.github.onlinestorecqrs.framework.api.Aggregate
-import com.github.onlinestorecqrs.framework.{AggregateLogger, EventManager, Snapshot}
+import com.github.onlinestorecqrs.framework.api.{Aggregate, AggregateLogger, EventManager, Snapshot}
+import javax.inject.Inject
 
-class OrderAggregate(eventManager: EventManager,
-                     logger: AggregateLogger) extends Aggregate[Order] {
+class OrderAggregate @Inject()(
+    eventManager: EventManager,
+    logger: AggregateLogger) extends Aggregate {
 
     private var order: Order = null
 

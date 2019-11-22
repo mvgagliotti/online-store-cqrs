@@ -7,9 +7,9 @@ object AggregateDefinition {
     type ShardIdExtractor = Any => String
 }
 
-case class AggregateDefinition[T](
+case class AggregateDefinition(
     name: String,
-    aggregateClass: Class[Aggregate[T]],
+    aggregateClass: Class[_ <: Aggregate],
     idExtractor: IdExtractor,
     shardIdExtractor: ShardIdExtractor
 )

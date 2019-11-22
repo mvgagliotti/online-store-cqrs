@@ -1,6 +1,6 @@
 package com.github.onlinestorecqrs.framework.api
 
-trait Aggregate[R] {
+trait Aggregate {
     type CommandHandler = PartialFunction[Any, Unit]
     type EventHandler = PartialFunction[Any, Unit]
 

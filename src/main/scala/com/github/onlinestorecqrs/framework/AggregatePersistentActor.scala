@@ -2,18 +2,19 @@ package com.github.onlinestorecqrs.framework
 
 import akka.actor.ActorLogging
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
-import com.github.onlinestorecqrs.framework.api.Aggregate
+import com.github.onlinestorecqrs.framework.api.{Aggregate, EventManager, Snapshot}
+import com.github.onlinestorecqrs.framework.shard.{AggregateBuilder, AggregateFactory}
 
 /**
   * Aggregate Persistent Actor
   *
-  * @param aggregateBuilder
-  * @tparam R
+  * @param aggregateFactory
   * @tparam T
   */
-class AggregatePersistentActor[T <: Aggregate[R], R](aggregateBuilder: AggregateBuilder[T, R]) extends PersistentActor
+class AggregatePersistentActor[T <: Aggregate](aggregateFactory: AggregateFactory[T]) extends PersistentActor
     with ActorLogging {
 
+    //TODO: extract adapter
     val eventManagerAdapter = new EventManager {
 
         override def persist[A](event: A)(handler: A => Unit): Unit = {
@@ -26,16 +27,16 @@ class AggregatePersistentActor[T <: Aggregate[R], R](aggregateBuilder: Aggregate
         }
     }
 
-    val aggregate: T = aggregateBuilder.build(eventManagerAdapter, new AkkaLoggerAdapter(this))
+    val aggregate: T = aggregateFactory.build(List(eventManagerAdapter, new AkkaLoggerAdapter(this)))
 
-    override def persistenceId: String = self.path.name.split("/")(self.path.name.split("/").length)
+    override def persistenceId: String = self.path.name.split("/")(self.path.name.split("/").length - 1)
 
     override def receiveCommand: Receive = aggregate.handleCommand
 
     override def receiveRecover: Receive = aggregate.handleEvent orElse receiveAkkaMessages
 
     def receiveAkkaMessages: Receive = {
-        case SnapshotOffer(_, payload: R) =>
+        case SnapshotOffer(_, payload: Any) =>
             aggregate.handleEvent(new Snapshot(payload))
         case RecoveryCompleted =>
             log.info(s"Aggregate recovery completed")

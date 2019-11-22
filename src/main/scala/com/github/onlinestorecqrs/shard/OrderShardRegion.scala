@@ -5,14 +5,14 @@ import akka.cluster.sharding.ShardRegion
 import com.github.onlinestorecqrs.domain.DomainModel.Order
 import com.github.onlinestorecqrs.domain.OrderAggregate
 import com.github.onlinestorecqrs.domain.DomainApi.OrderCommand
-import com.github.onlinestorecqrs.framework.ShardedAggregateConfigBuilder
+import com.github.onlinestorecqrs.framework.shard.ShardedAggregateConfigBuilder
 
 object OrderShardRegion {
 
     val NUMBER_OF_SHARDS = 10
 
     def setupClusterSharding(system: ActorSystem): ActorRef = {
-        new ShardedAggregateConfigBuilder[OrderAggregate, Order]()
+        new ShardedAggregateConfigBuilder[OrderAggregate]()
             .withName("Order")
             .withInstanceCreator((new OrderAggregate(_, _)))
             .withEntityIdExtractor(OrderShardRegion.extractEntityId)
