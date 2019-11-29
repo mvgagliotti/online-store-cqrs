@@ -1,6 +1,6 @@
 package com.github.onlinestorecqrs.domain
 
-import com.github.onlinestorecqrs.domain.DomainModel.Item
+import com.github.onlinestorecqrs.domain.DomainModel.{Item, Order}
 
 /**
   * Domain commands % events:
@@ -40,5 +40,7 @@ object DomainApi {
     case class OrderPayedEvent(orderId: String, value: BigDecimal)
 
     case class OrderRefundedEvent(orderId: String, value: BigDecimal)
+
+    case class GetEvent(order: Order)
 
 }

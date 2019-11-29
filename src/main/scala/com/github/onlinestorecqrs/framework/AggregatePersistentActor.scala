@@ -3,7 +3,7 @@ package com.github.onlinestorecqrs.framework
 import akka.actor.ActorLogging
 import akka.persistence.{PersistentActor, RecoveryCompleted, SnapshotOffer}
 import com.github.onlinestorecqrs.framework.api.{Aggregate, EventManager, Snapshot}
-import com.github.onlinestorecqrs.framework.shard.{AggregateBuilder, AggregateFactory}
+import com.github.onlinestorecqrs.framework.shard.{AggregateFactory}
 
 /**
   * Aggregate Persistent Actor
