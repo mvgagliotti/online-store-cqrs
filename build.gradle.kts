@@ -51,8 +51,8 @@ dependencies {
     /////////////////////
     /// Test dependencies
     /////////////////////
-    testImplementation("com.typesafe.akka:akka-actor-testkit-typed_$scalaVersion:$akkaVersion")
-    testImplementation("org.scalatest:scalatest:$scalaTestVersion")
+    testImplementation("com.typesafe.akka:akka-testkit_$scalaVersion:$akkaVersion")
+    testImplementation("org.scalatest:scalatest_$scalaVersion:$scalaTestVersion")
     testImplementation("com.typesafe.akka:akka-persistence-cassandra-launcher_$scalaVersion:$akkaPersistenceCassandraVersion")
     testImplementation("com.typesafe.akka:akka-http-testkit_$scalaVersion:$akkaHttpVersion")
 }
@@ -66,6 +66,13 @@ tasks {
         newTransformer.resource = "reference.conf"
         transformers.add(newTransformer)
     }
+}
+
+//this task is necessary to run the tests
+task("spec", JavaExec::class) {
+    main = "org.scalatest.tools.Runner"
+    args = listOf("-R", "build/classes/scala/test", "-o")
+    classpath = sourceSets["test"].runtimeClasspath
 }
 
 application {

@@ -26,8 +26,10 @@ class OrderAggregate @Inject()(
         case OrderCreatedEvent(orderId, userId, items) =>
             logger.info(s"Order created event: $orderId")
             this.order = new Order(orderId, userId, items)
+
         case event@GetEvent(_) =>
             logger.info(s"Retrieved ${event}")
+
         case Snapshot(payload: Order) =>
             this.order = payload
     }
