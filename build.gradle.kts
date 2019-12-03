@@ -68,12 +68,28 @@ tasks {
     }
 }
 
-//this task is necessary to run the tests
-task("spec", JavaExec::class) {
+//these tasks are necessary to run the tests
+
+val startCassandra = task("startCassandra", JavaExec::class) {
+    main = "com.github.onlinestorecqrs.CassandraRunner"
+    args = listOf("start")
+    classpath = sourceSets["test"].runtimeClasspath
+}
+
+val spec = task("spec", JavaExec::class) {
     main = "org.scalatest.tools.Runner"
     args = listOf("-R", "build/classes/scala/test", "-o")
     classpath = sourceSets["test"].runtimeClasspath
 }
+
+spec.dependsOn(startCassandra)
+
+task("stopCassandra", JavaExec::class) {
+    main = "com.github.onlinestorecqrs.CassandraRunner"
+    args = listOf("stop")
+    classpath = sourceSets["test"].runtimeClasspath
+}.shouldRunAfter(spec)
+
 
 application {
     mainClassName = "com.github.onlinestorecqrs.Main"

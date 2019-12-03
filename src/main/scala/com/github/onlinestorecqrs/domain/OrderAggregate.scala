@@ -13,6 +13,7 @@ class OrderAggregate @Inject()(
 
     override def handleCommand: CommandHandler = {
         case CreateOrderCommand(orderId, userId, items) =>
+            logger.info("Order requested to be created")
             eventManager.persist(OrderCreatedEvent(orderId, userId, items)) { event =>
                 logger.info(s"Order has just been created: $orderId")
                 eventManager.notify(event)

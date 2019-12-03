@@ -1,19 +1,20 @@
-package com.github.onlinestorecqrs
-
+package com.github.onlinestorecqrs.framework
 
 import java.io.File
 
 import akka.actor.{ActorSystem, Props}
 import akka.persistence.cassandra.testkit.CassandraLauncher
 import akka.testkit.{ImplicitSender, TestKit}
-import com.github.onlinestorecqrs.AggregatePersistentActorSec.{CreateCommand, CreatedEvent, MyAggregate}
-import com.github.onlinestorecqrs.framework.AggregatePersistentActor
+import com.github.onlinestorecqrs.framework.AggregatePersistentActorSec.{CreateCommand, CreatedEvent, MyAggregate}
 import com.github.onlinestorecqrs.framework.api.{Aggregate, AggregateLogger, EventManager}
 import com.github.onlinestorecqrs.framework.shard.AggregateFactory
+import com.typesafe.config.ConfigFactory
 import javax.inject.Inject
 import org.scalatest.{BeforeAndAfterAll, WordSpecLike}
 
-final class AggregatePersistentActorSec extends TestKit(ActorSystem("testActorSystem"))
+final class AggregatePersistentActorSec extends
+    TestKit(ActorSystem("testActorSystem", ConfigFactory.load("AggregatePersistentActorSec.conf")))
+
     with ImplicitSender
     with WordSpecLike
     with BeforeAndAfterAll {
@@ -23,12 +24,13 @@ final class AggregatePersistentActorSec extends TestKit(ActorSystem("testActorSy
             new File("/tmp/cassandra"),
             CassandraLauncher.DefaultTestConfigResource,
             true,
-            9042
+            9042,
         )
     }
 
     override def afterAll(): Unit = {
         CassandraLauncher.stop()
+        TestKit.shutdownActorSystem(system)
     }
 
     "An aggregate persistent actor" should {
